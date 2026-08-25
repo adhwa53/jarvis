@@ -1,11 +1,9 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 from groq import Groq
 
 app = FastAPI()
-
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 class ChatRequest(BaseModel):
     prompt: str
@@ -16,20 +14,21 @@ def home():
 
 @app.post("/chat")
 def chat(request: ChatRequest):
-    if not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY environment variable is missing")
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return {"reply": "Error: GROQ_API_KEY tak dijumpai kat Render!"}
     
     try:
-        client = Groq(api_key=GROQ_API_KEY)
+        client = Groq(api_key=api_key)
         completion = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": "Kau ialah JARVIS."},
+                {"role": "system", "content": "Kau ialah JARVIS, pembantu AI yang bijak, ringkas dan mesra."},
                 {"role": "user", "content": request.prompt}
             ],
             temperature=0.7,
-            max_tokens=500
+            max_tokens=300
         )
         return {"reply": completion.choices[0].message.content}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"reply": f"Groq Error: {str(e)}"}
