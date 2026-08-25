@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JARVIS AI Control</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; max-width: 650px; margin: auto; }
-        .card { background: #1e293b; padding: 20px; margin-bottom: 20px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; max-width: 650px; margin: auto; }
+        .card { background: #1e293b; padding: 20px; margin-bottom: 20px; border-radius: 12px; border: 1px solid #334155; }
         h2, h3 { color: #38bdf8; margin-top: 0; }
         button { background: #0284c7; color: white; border: none; padding: 10px 16px; cursor: pointer; border-radius: 6px; font-weight: bold; margin-right: 5px; }
         button:hover { background: #0369a1; }
@@ -20,17 +20,17 @@
     <h2>🤖 JARVIS Dashboard</h2>
 
     <div class="card">
-        <h3>Sembang & Suara</h3>
+        <h3>1. Sembang & Suara</h3>
         <div id="chatbox"></div>
-        <input type="text" id="userInput" placeholder="Tulis mesej di sini...">
+        <input type="text" id="userInput" placeholder="Tulis mesej atau cakap...">
         <button onclick="sendChat()">Hantar</button>
         <button onclick="startVoice()">🎙️ Suara</button>
     </div>
 
     <div class="card">
-        <h3>Analisis Gambar (Vision)</h3>
+        <h3>2. Vision (Analisis Gambar)</h3>
         <input type="file" id="imageInput" accept="image/*">
-        <input type="text" id="imagePrompt" placeholder="Tanya tentang gambar ini...">
+        <input type="text" id="imagePrompt" placeholder="Tanya sesuatu tentang gambar ni...">
         <button onclick="sendVision()">Hantar Gambar</button>
     </div>
 
