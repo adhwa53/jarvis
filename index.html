@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>JARVIS Interface (Fasa 2)</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #121212; color: #fff; padding: 20px; max-width: 600px; margin: auto; }
+        .card { background: #1e1e1e; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; }
+        button { background: #008cba; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #005f73; }
+        input[type="text"], input[type="file"] { width: 95%; padding: 8px; margin: 5px 0; background: #2b2b2b; color: white; border: 1px solid #444; }
+        #chatbox { height: 150px; overflow-y: scroll; background: #000; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>🤖 JARVIS AI Dashboard</h2>
+
+    <div class="card">
+        <h3>1. Voice Assistant & Text Chat</h3>
+        <div id="chatbox"></div>
+        <input type="text" id="userInput" placeholder="Tulis mesej atau tekan mikrofon...">
+        <button onclick="sendChat()">Hantar Teks</button>
+        <button onclick="startVoice()">🎙️ Cakap (Voice)</button>
+    </div>
+
+    <div class="card">
+        <h3>2. Vision (Analisis Gambar)</h3>
+        <input type="file" id="imageInput" accept="image/*">
+        <input type="text" id="imagePrompt" placeholder="Tanya sesuatu tentang gambar ni...">
+        <button onclick="sendVision()">Hantar Gambar</button>
+    </div>
+
+    <script>
+        const BACKEND_URL = "https://jarvis-xvjy.onrender.com";
+
+        // Speech Recognition (Voice Input)
+        function startVoice() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert("Pelayar anda tidak menyokong Speech Recognition.");
+            
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'ms-MY';
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('userInput').value = transcript;
+                sendChat();
+            };
+        }
+
+        // Text-to-Speech (JARVIS Balas Suara)
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ms-MY';
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Send Text / Voice Chat
+        async function sendChat() {
+            const prompt = document.getElementById('userInput').value;
+            if (!prompt) return;
+
+            const chatbox = document.getElementById('chatbox');
+            chatbox.innerHTML += `<p><b>Anda:</b> ${prompt}</p>`;
+
+            const res = await fetch(`${BACKEND_URL}/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            });
+
+            const data = await res.json();
+            chatbox.innerHTML += `<p><b>JARVIS:</b> ${data.reply}</p>`;
+            chatbox.scrollTop = chatbox.scrollHeight;
+            document.getElementById('userInput').value = '';
+            
+            speak(data.reply);
+        }
+
+        // Send Image to Vision Endpoint
+        async function sendVision() {
+            const fileInput = document.getElementById('imageInput');
+            const prompt = document.getElementById('imagePrompt').value || "Apa yang ada dalam gambar ni?";
+            
+            if (fileInput.files.length === 0) return alert("Sila pilih gambar terlebih dahulu.");
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            formData.append("prompt", prompt);
+
+            const chatbox = document.getElementById('chatbox');
+            chatbox.innerHTML += `<p><i>[Menghantar gambar untuk dianalisis...]</i></p>`;
+
+            const res = await fetch(`${BACKEND_URL}/vision`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            chatbox.innerHTML += `<p><b>JARVIS (Vision):</b> ${data.reply}</p>`;
+            speak(data.reply);
+        }
+    </script>
+</body>
+</html>
