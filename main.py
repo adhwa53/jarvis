@@ -21,29 +21,31 @@ def chat(request: ChatRequest):
     try:
         client = Groq(api_key=api_key.strip())
         
-        # Cari model chat/instruct sahaja daripada senarai akaun kau
-        models_list = client.models.list()
-        chat_models = [
-            m.id for m in models_list.data 
-            if any(k in m.id for k in ["llama-3", "mixtral", "gemma"]) 
-            and "guard" not in m.id 
-            and "safetensors" not in m.id
-        ]
+        # Dapatkan senarai model dari akaun Groq
+        models_data = client.models.list().data
+        all_model_ids = [m.id for m in models_data]
         
-        selected_model = chat_models[0] if chat_models else "llama-3.1-8b-instant"
-        
-        completion = client.chat.completions.create(
-            model=selected_model,
-            messages=[
-                {"role": "user", "content": request.prompt}
-            ],
-            temperature=0.7,
-            max_tokens=300
-        )
-        return {
-            "reply": completion.choices[0].message.content,
-            "model_used": selected_model
-        }
+        # Cuba setiap model satu per satu sehingga berjaya
+        for model_id in all_model_ids:
+            # Elak model keselamatan/guard
+            if "guard" in model_id or "safetensors" in model_id:
+                continue
+                
+            try:
+                completion = client.chat.completions.create(
+                    model=model_id,
+                    messages=[{"role": "user", "content": request.prompt}],
+                    temperature=0.7,
+                    max_tokens=300
+                )
+                return {
+                    "reply": completion.choices[0].message.content,
+                    "model_used": model_id
+                }
+            except Exception:
+                continue
+                
+        return {"reply": f"Tiada model yang boleh digunakan. Senarai model akaun anda: {all_model_ids}"}
         
     except Exception as e:
         return {"reply": f"Groq Error: {str(e)}"}
