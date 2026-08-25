@@ -22,7 +22,7 @@ class ChatRequest(BaseModel):
     prompt: str
 
 # ---------------------------------------------------------
-# DATABASE SETUP
+# DATABASE & MEMORY MANAGEMENT (SQLite)
 # ---------------------------------------------------------
 def init_db():
     conn = sqlite3.connect("jarvis_memory.db")
@@ -41,17 +41,6 @@ def init_db():
 
 init_db()
 
-def save_memory(user_id: str, key: str, value: str):
-    conn = sqlite3.connect("jarvis_memory.db")
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO memory (user_id, key, value) 
-        VALUES (?, ?, ?) 
-        ON CONFLICT(user_id, key) DO UPDATE SET value=excluded.value
-    """, (user_id, key.lower(), value))
-    conn.commit()
-    conn.close()
-
 def get_all_memories(user_id: str):
     conn = sqlite3.connect("jarvis_memory.db")
     cursor = conn.cursor()
@@ -65,25 +54,24 @@ def get_all_memories(user_id: str):
 # ---------------------------------------------------------
 # ENDPOINTS
 # ---------------------------------------------------------
-# PAPARKAN WEB UI TERUS KAT DOMAIN RENDER
 @app.get("/", response_class=HTMLResponse)
 def home():
     if os.path.exists("index.html"):
         with open("index.html", "r", encoding="utf-8") as f:
             return f.read()
-    return "<h1>JARVIS Backend Online</h1><p>Fail index.html tak jumpa dalam repo.</p>"
+    return "<h1>JARVIS Online</h1><p>Fail index.html belum di-commit ke GitHub root folder.</p>"
 
 @app.post("/chat")
 def chat(request: ChatRequest):
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        return {"reply": "Error: GROQ_API_KEY tak dijumpai!"}
+        return {"reply": "Error: GROQ_API_KEY tak dijumpai di Render!"}
     
     try:
         client = Groq(api_key=api_key.strip())
         current_memories = get_all_memories(request.user_id)
         
-        system_prompt = f"""Kau ialah JARVIS, pembantu AI yang bijak, ringkas dan pantas.
+        system_prompt = f"""Kau ialah JARVIS, pembantu AI yang bijak, ringkas dan mesra.
 Memori sedia ada pengguna ({request.user_id}):
 {current_memories}
 """
@@ -98,19 +86,21 @@ Memori sedia ada pengguna ({request.user_id}):
         )
         return {"reply": response.choices[0].message.content}
     except Exception as e:
-        return {"reply": f"Error: {str(e)}"}
+        return {"reply": f"Groq Error: {str(e)}"}
 
 @app.post("/vision")
 async def vision(prompt: str = Form(...), file: UploadFile = File(...)):
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        return {"reply": "Error: GROQ_API_KEY tak dijumpai!"}
+        return {"reply": "Error: GROQ_API_KEY tak dijumpai di Render!"}
     
     try:
         contents = await file.read()
         base64_image = base64.b64encode(contents).decode('utf-8')
         
         client = Groq(api_key=api_key.strip())
+        
+        # Guna model vision aktif terkini
         response = client.chat.completions.create(
             model="llama-3.2-11b-vision-preview",
             messages=[
