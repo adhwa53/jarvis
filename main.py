@@ -16,26 +16,25 @@ def home():
 def chat(request: ChatRequest):
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        return {"reply": "Error: GROQ_API_KEY tak dijumpai kat Render Environment!"}
+        return {"reply": "Error: GROQ_API_KEY tak dijumpai kat Render!"}
     
     try:
         client = Groq(api_key=api_key.strip())
         
-        # 1. Tarik senarai rasmi model yang dibenarkan untuk API key kau
+        # Cari model chat/instruct sahaja daripada senarai akaun kau
         models_list = client.models.list()
-        available_models = [m.id for m in models_list.data if "llama" in m.id or "mixtral" in m.id]
+        chat_models = [
+            m.id for m in models_list.data 
+            if any(k in m.id for k in ["llama-3", "mixtral", "gemma"]) 
+            and "guard" not in m.id 
+            and "safetensors" not in m.id
+        ]
         
-        if not available_models:
-            # Fallback jika tiada keyword spesifik
-            available_models = [m.id for m in models_list.data]
-            
-        selected_model = available_models[0]
+        selected_model = chat_models[0] if chat_models else "llama-3.1-8b-instant"
         
-        # 2. Hantar prompt guna model pertama yang sah
         completion = client.chat.completions.create(
             model=selected_model,
             messages=[
-                {"role": "system", "content": "Kau ialah JARVIS, pembantu AI yang bijak, ringkas dan mesra."},
                 {"role": "user", "content": request.prompt}
             ],
             temperature=0.7,
