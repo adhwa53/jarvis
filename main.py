@@ -3,7 +3,7 @@ import json
 import sqlite3
 import base64
 from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from groq import Groq
@@ -58,17 +58,13 @@ def get_all_memories(user_id: str):
         return "Tiada memori."
 
 # ---------------------------------------------------------
-# ENDPOINTS
+# ROUTE UTAMA (SERVE INDEX.HTML)
 # ---------------------------------------------------------
 @app.get("/")
 def home():
     if os.path.exists("index.html"):
-        try:
-            with open("index.html", "r", encoding="utf-8") as f:
-                return HTMLResponse(content=f.read())
-        except Exception:
-            pass
-    return {"status": "JARVIS Backend Active"}
+        return FileResponse("index.html")
+    return HTMLResponse("<h2>Error: Fail index.html tak jumpa dalam GitHub root repository!</h2>")
 
 @app.post("/chat")
 def chat(request: ChatRequest):
