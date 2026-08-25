@@ -3,13 +3,13 @@ import json
 import sqlite3
 import base64
 from fastapi import FastAPI, File, UploadFile, Form
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from groq import Groq
 
 app = FastAPI()
 
-# Benarkan sambungan dari Frontend (HTML/JS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,7 +22,7 @@ class ChatRequest(BaseModel):
     prompt: str
 
 # ---------------------------------------------------------
-# DATABASE & MEMORY MANAGEMENT (SQLite)
+# DATABASE SETUP
 # ---------------------------------------------------------
 def init_db():
     conn = sqlite3.connect("jarvis_memory.db")
@@ -63,13 +63,16 @@ def get_all_memories(user_id: str):
     return "\n".join([f"- {k}: {v}" for k, v in rows])
 
 # ---------------------------------------------------------
-# FASTAPI ENDPOINTS
+# ENDPOINTS
 # ---------------------------------------------------------
-@app.get("/")
+# PAPARKAN WEB UI TERUS KAT DOMAIN RENDER
+@app.get("/", response_class=HTMLResponse)
 def home():
-    return {"status": "JARVIS Fasa 2 (Complete) Online"}
+    if os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>JARVIS Backend Online</h1><p>Fail index.html tak jumpa dalam repo.</p>"
 
-# Endpoint 1: Standard Chat + Memory
 @app.post("/chat")
 def chat(request: ChatRequest):
     api_key = os.environ.get("GROQ_API_KEY")
@@ -97,7 +100,6 @@ Memori sedia ada pengguna ({request.user_id}):
     except Exception as e:
         return {"reply": f"Error: {str(e)}"}
 
-# Endpoint 2: Vision (Upload & Analisis Gambar)
 @app.post("/vision")
 async def vision(prompt: str = Form(...), file: UploadFile = File(...)):
     api_key = os.environ.get("GROQ_API_KEY")
