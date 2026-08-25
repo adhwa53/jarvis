@@ -30,8 +30,13 @@ class NoteRequest(BaseModel):
     title: str
     content: str
 
+class ReminderRequest(BaseModel):
+    user_id: str = "default_user"
+    task: str
+    time_str: str
+
 # ---------------------------------------------------------
-# DATABASE SETUP (SQLite)
+# DATABASE SETUP (SQLite - Diinspirasikan dari Jarvis Architecture)
 # ---------------------------------------------------------
 def init_db():
     conn = sqlite3.connect("jarvis_memory.db")
@@ -51,6 +56,15 @@ def init_db():
             user_id TEXT,
             title TEXT,
             content TEXT
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reminders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT,
+            task TEXT,
+            time_str TEXT,
+            status TEXT DEFAULT 'PENDING'
         )
     """)
     conn.commit()
@@ -88,7 +102,7 @@ def get_all_memories(user_id: str):
         return "Tiada memori."
 
 # ---------------------------------------------------------
-# ULTIMATE SCI-FI OMNI-HUD UI
+# ULTIMATE SCI-FI OMNI-HUD UI v5.0
 # ---------------------------------------------------------
 HTML_CODE = """
 <!DOCTYPE html>
@@ -96,11 +110,11 @@ HTML_CODE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J.A.R.V.I.S // OMNI-HUD v4.0</title>
+    <title>J.A.R.V.I.S // OMNI-HUD v5.0</title>
     <style>
         :root {
             --bg-deep: #020408;
-            --panel-bg: rgba(8, 13, 24, 0.92);
+            --panel-bg: rgba(8, 13, 24, 0.94);
             --border-neon: rgba(249, 115, 22, 0.45);
             --orange-glow: #f97316;
             --cyan-glow: #38bdf8;
@@ -117,7 +131,7 @@ HTML_CODE = """
             background-size: 100% 4px, 100% 100%;
             color: var(--text-main);
             padding: 10px;
-            max-width: 1200px;
+            max-width: 1300px;
             margin: auto;
         }
 
@@ -149,7 +163,7 @@ HTML_CODE = """
 
         .grid-container {
             display: grid;
-            grid-template-columns: 1.6fr 1fr 1fr;
+            grid-template-columns: 1.5fr 1fr 1fr;
             gap: 12px;
         }
 
@@ -191,7 +205,7 @@ HTML_CODE = """
         }
 
         #chatbox {
-            height: 200px;
+            height: 190px;
             overflow-y: auto;
             background: rgba(1, 3, 8, 0.95);
             padding: 8px;
@@ -210,7 +224,7 @@ HTML_CODE = """
             margin-bottom: 6px;
         }
 
-        input[type="text"], select, textarea {
+        input[type="text"], select, textarea, input[type="datetime-local"] {
             width: 100%;
             padding: 7px;
             background: rgba(1, 3, 8, 0.95);
@@ -219,11 +233,11 @@ HTML_CODE = """
             border-radius: 4px;
             outline: none;
             font-family: inherit;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             margin-bottom: 6px;
         }
 
-        input[type="text"]:focus, select:focus, textarea:focus {
+        input:focus, select:focus, textarea:focus {
             border-color: var(--cyan-glow);
             box-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
         }
@@ -276,8 +290,8 @@ HTML_CODE = """
         .active-bar .bar { animation: pulseWave 0.4s infinite alternate; }
         @keyframes pulseWave { 0% { height: 4px; } 100% { height: 14px; background: var(--orange-glow); } }
 
-        #memoryList, #notesList {
-            max-height: 110px;
+        #memoryList, #notesList, #remindersList {
+            max-height: 100px;
             overflow-y: auto;
             background: rgba(1, 3, 8, 0.95);
             padding: 5px;
@@ -286,9 +300,10 @@ HTML_CODE = """
             font-size: 0.7rem;
             margin-bottom: 5px;
         }
-        .mem-item, .note-item { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px dotted rgba(255,255,255,0.1); }
+        .mem-item, .note-item, .rem-item { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px dotted rgba(255,255,255,0.1); }
         .mem-item span { color: #facc15; }
         .note-item span { color: #38bdf8; }
+        .rem-item span { color: #f43f5e; }
         .btn-del { background: #dc2626; padding: 1px 4px; font-size: 0.6rem; box-shadow: none; }
 
         #terminalLog {
@@ -297,7 +312,7 @@ HTML_CODE = """
             border: 1px solid rgba(74, 222, 128, 0.3);
             border-radius: 4px;
             padding: 6px;
-            height: 70px;
+            height: 60px;
             overflow-y: auto;
             font-size: 0.65rem;
             line-height: 1.1;
@@ -319,7 +334,7 @@ HTML_CODE = """
 <body onload="initSystem()">
 
     <header>
-        <h1>⚡ J.A.R.V.I.S // OMNI-HUD v4</h1>
+        <h1>⚡ J.A.R.V.I.S // OMNI-HUD v5</h1>
         <div class="hud-clock" id="clockDisplay">00:00:00</div>
     </header>
 
@@ -336,7 +351,7 @@ HTML_CODE = """
                 </select>
 
                 <div id="chatbox">
-                    <p class="jarvis-msg"><b>JARVIS:</b> Sistem protokol v4 siap. Sedia menerima arahan.</p>
+                    <p class="jarvis-msg"><b>JARVIS:</b> Sistem v5 aktif dengan modul automasi misi.</p>
                 </div>
                 
                 <div class="visualizer" id="vizBar">
@@ -376,37 +391,37 @@ HTML_CODE = """
                 <h3>System Terminal Log</h3>
                 <div id="terminalLog">
                     [00:00:01] System boot initialized...<br>
-                    [00:00:02] Neural link active.
+                    [00:00:02] Automation modules loaded.
                 </div>
             </div>
 
             <div class="card sys-metrics">
                 <h3>Hardware Metrics</h3>
                 <p>Cloud AI: <span>Groq gpt-oss-20b</span></p>
-                <p>Latency: <span>11ms (Optimal)</span></p>
-                <p>Security: <span style="color:#4ade80">SECURE</span></p>
+                <p>Status: <span style="color:#4ade80">ONLINE</span></p>
             </div>
         </div>
 
-        <!-- Kolum 3: Nota Misi & Konfigurasi Suara -->
+        <!-- Kolum 3: Nota Misi & Reminders (Modul Tambahan Baru) -->
         <div>
             <div class="card">
                 <h3>Mission Logs & Notes</h3>
                 <input type="text" id="noteTitle" placeholder="Tajuk nota...">
                 <textarea id="noteContent" placeholder="Kandungan nota..." rows="2"></textarea>
                 <button class="btn-full" style="background:#d97706; font-size:0.7rem; padding:4px;" onclick="saveNote()">➕ Simpan Nota</button>
-                <div id="notesList" style="margin-top:6px;">
+                <div id="notesList" style="margin-top:5px;">
                     <p style="color:#64748b; text-align:center; font-size:0.7rem;">Tiada nota.</p>
                 </div>
             </div>
 
-            <div class="card settings-box">
-                <h3>Voice Config (TTS)</h3>
-                <label>Kelajuan: <span id="rateVal">1.0</span>x</label>
-                <input type="range" id="speechRate" min="0.7" max="1.5" step="0.1" value="1.0" oninput="document.getElementById('rateVal').innerText=this.value">
-                
-                <label>Nada: <span id="pitchVal">1.0</span></label>
-                <input type="range" id="speechPitch" min="0.5" max="1.5" step="0.1" value="1.0" oninput="document.getElementById('pitchVal').innerText=this.value">
+            <div class="card">
+                <h3>Protocol Reminders</h3>
+                <input type="text" id="remTask" placeholder="Perkara/Tugasan...">
+                <input type="text" id="remTime" placeholder="Masa (cth: Esok 3 petang)">
+                <button class="btn-full" style="background:#e11d48; font-size:0.7rem; padding:4px;" onclick="saveReminder()">⏰ Tambah Peringatan</button>
+                <div id="remindersList" style="margin-top:5px;">
+                    <p style="color:#64748b; text-align:center; font-size:0.7rem;">Tiada peringatan.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -424,6 +439,7 @@ HTML_CODE = """
         function initSystem() {
             loadMemories();
             loadNotes();
+            loadReminders();
             updateClock();
         }
 
@@ -469,8 +485,6 @@ HTML_CODE = """
                 setVisualizer(true);
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'ms-MY';
-                utterance.rate = parseFloat(document.getElementById('speechRate').value);
-                utterance.pitch = parseFloat(document.getElementById('speechPitch').value);
                 utterance.onend = () => setVisualizer(false);
                 window.speechSynthesis.speak(utterance);
             }
@@ -548,6 +562,50 @@ HTML_CODE = """
             loadNotes();
         }
 
+        async function loadReminders() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/reminders`);
+                const data = await res.json();
+                const listDiv = document.getElementById('remindersList');
+                if (data.reminders.length === 0) {
+                    listDiv.innerHTML = '<p style="color:#64748b; text-align:center; font-size:0.7rem;">Tiada peringatan.</p>';
+                    return;
+                }
+                listDiv.innerHTML = data.reminders.map(r => `
+                    <div class="rem-item">
+                        <span><b>${r.task}</b> (${r.time_str})</span>
+                        <button class="btn-del" onclick="deleteReminder(${r.id})">X</button>
+                    </div>
+                `).join('');
+            } catch (err) { console.error("Gagal muat reminders"); }
+        }
+
+        async function saveReminder() {
+            const task = document.getElementById('remTask').value;
+            const time_str = document.getElementById('remTime').value;
+            if (!task || !time_str) return alert("Sila isi tugasan dan masa.");
+
+            await fetch(`${BACKEND_URL}/add_reminder`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task, time_str })
+            });
+            document.getElementById('remTask').value = '';
+            document.getElementById('remTime').value = '';
+            logTerm(`Reminder set: ${task}`);
+            loadReminders();
+        }
+
+        async function deleteReminder(id) {
+            await fetch(`${BACKEND_URL}/delete_reminder`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            logTerm("Reminder deleted.");
+            loadReminders();
+        }
+
         async function sendChat() {
             const prompt = document.getElementById('userInput').value;
             const persona = document.getElementById('personaSelect').value;
@@ -586,7 +644,7 @@ HTML_CODE = """
 """
 
 # ---------------------------------------------------------
-# ENDPOINTS BACKEND TAMBAHAN
+# ENDPOINTS BACKEND (TAMBAHAN REMINDERS)
 # ---------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -655,6 +713,42 @@ def delete_note_api(req: NoteDeleteRequest):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.get("/reminders")
+def get_reminders_api(user_id: str = "default_user"):
+    try:
+        conn = sqlite3.connect("jarvis_memory.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, task, time_str FROM reminders WHERE user_id = ?", (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"reminders": [{"id": r[0], "task": r[1], "time_str": r[2]} for r in rows]}
+    except Exception:
+        return {"reminders": []}
+
+@app.post("/add_reminder")
+def add_reminder_api(req: ReminderRequest):
+    try:
+        conn = sqlite3.connect("jarvis_memory.db")
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO reminders (user_id, task, time_str) VALUES (?, ?, ?)", (req.user_id, req.task, req.time_str))
+        conn.commit()
+        conn.close()
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/delete_reminder")
+def delete_reminder_api(req: NoteDeleteRequest):
+    try:
+        conn = sqlite3.connect("jarvis_memory.db")
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM reminders WHERE id = ?", (req.id,))
+        conn.commit()
+        conn.close()
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.post("/chat")
 def chat(request: ChatRequest):
     api_key = os.environ.get("GROQ_API_KEY")
@@ -665,7 +759,6 @@ def chat(request: ChatRequest):
         client = Groq(api_key=api_key.strip())
         current_memories = get_all_memories(request.user_id)
         
-        # Persona Logic
         persona_instructions = {
             "standard": "Kau ialah JARVIS, pembantu AI peribadi gaya sains fiksyen yang bijak, ringkas, dan setia.",
             "stark": "Kau ialah JARVIS dalam mod Tony Stark. Gaya bahasa kau sedikit 'sarcastic', bersahaja, santai, bijak, tetapi tetap membantu.",
