@@ -22,7 +22,7 @@ class ChatRequest(BaseModel):
     prompt: str
 
 # ---------------------------------------------------------
-# DATABASE & MEMORY MANAGEMENT (SQLite)
+# DATABASE & MEMORY
 # ---------------------------------------------------------
 def init_db():
     conn = sqlite3.connect("jarvis_memory.db")
@@ -39,27 +39,36 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
+try:
+    init_db()
+except Exception:
+    pass
 
 def get_all_memories(user_id: str):
-    conn = sqlite3.connect("jarvis_memory.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT key, value FROM memory WHERE user_id = ?", (user_id,))
-    rows = cursor.fetchall()
-    conn.close()
-    if not rows:
-        return "Tiada memori disimpan lagi."
-    return "\n".join([f"- {k}: {v}" for k, v in rows])
+    try:
+        conn = sqlite3.connect("jarvis_memory.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT key, value FROM memory WHERE user_id = ?", (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        if not rows:
+            return "Tiada memori disimpan lagi."
+        return "\n".join([f"- {k}: {v}" for k, v in rows])
+    except Exception:
+        return "Tiada memori."
 
 # ---------------------------------------------------------
 # ENDPOINTS
 # ---------------------------------------------------------
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def home():
     if os.path.exists("index.html"):
-        with open("index.html", "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>JARVIS Online</h1><p>Fail index.html belum di-commit ke GitHub root folder.</p>"
+        try:
+            with open("index.html", "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
+        except Exception:
+            pass
+    return {"status": "JARVIS Backend Active"}
 
 @app.post("/chat")
 def chat(request: ChatRequest):
@@ -99,8 +108,6 @@ async def vision(prompt: str = Form(...), file: UploadFile = File(...)):
         base64_image = base64.b64encode(contents).decode('utf-8')
         
         client = Groq(api_key=api_key.strip())
-        
-        # Guna model vision aktif terkini
         response = client.chat.completions.create(
             model="llama-3.2-11b-vision-preview",
             messages=[
