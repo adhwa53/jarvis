@@ -16,14 +16,14 @@ def home():
 def chat(request: ChatRequest):
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        return {"reply": "Error: GROQ_API_KEY tidak dijumpai!"}
+        return {"reply": "Error: GROQ_API_KEY tak dijumpai kat Render!"}
     
     try:
         client = Groq(api_key=api_key)
         completion = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": "Kau ialah JARVIS, pembantu AI yang bijak dan mesra."},
+                {"role": "system", "content": "Kau ialah JARVIS, pembantu AI yang bijak, ringkas dan mesra."},
                 {"role": "user", "content": request.prompt}
             ],
             temperature=0.7,
