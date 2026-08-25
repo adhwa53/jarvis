@@ -2,41 +2,44 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <title>JARVIS Interface (Fasa 2)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS AI Control</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #121212; color: #fff; padding: 20px; max-width: 600px; margin: auto; }
-        .card { background: #1e1e1e; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; }
-        button { background: #008cba; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
-        button:hover { background: #005f73; }
-        input[type="text"], input[type="file"] { width: 95%; padding: 8px; margin: 5px 0; background: #2b2b2b; color: white; border: 1px solid #444; }
-        #chatbox { height: 150px; overflow-y: scroll; background: #000; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; max-width: 650px; margin: auto; }
+        .card { background: #1e293b; padding: 20px; margin-bottom: 20px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        h2, h3 { color: #38bdf8; margin-top: 0; }
+        button { background: #0284c7; color: white; border: none; padding: 10px 16px; cursor: pointer; border-radius: 6px; font-weight: bold; margin-right: 5px; }
+        button:hover { background: #0369a1; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 10px; margin: 8px 0; background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; box-sizing: border-box; }
+        #chatbox { height: 200px; overflow-y: auto; background: #090d16; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 12px; }
+        .user-msg { color: #38bdf8; margin: 4px 0; }
+        .jarvis-msg { color: #4ade80; margin: 4px 0; }
     </style>
 </head>
 <body>
-    <h2>🤖 JARVIS AI Dashboard</h2>
+    <h2>🤖 JARVIS Dashboard</h2>
 
     <div class="card">
-        <h3>1. Voice Assistant & Text Chat</h3>
+        <h3>Sembang & Suara</h3>
         <div id="chatbox"></div>
-        <input type="text" id="userInput" placeholder="Tulis mesej atau tekan mikrofon...">
-        <button onclick="sendChat()">Hantar Teks</button>
-        <button onclick="startVoice()">🎙️ Cakap (Voice)</button>
+        <input type="text" id="userInput" placeholder="Tulis mesej di sini...">
+        <button onclick="sendChat()">Hantar</button>
+        <button onclick="startVoice()">🎙️ Suara</button>
     </div>
 
     <div class="card">
-        <h3>2. Vision (Analisis Gambar)</h3>
+        <h3>Analisis Gambar (Vision)</h3>
         <input type="file" id="imageInput" accept="image/*">
-        <input type="text" id="imagePrompt" placeholder="Tanya sesuatu tentang gambar ni...">
+        <input type="text" id="imagePrompt" placeholder="Tanya tentang gambar ini...">
         <button onclick="sendVision()">Hantar Gambar</button>
     </div>
 
     <script>
-        const BACKEND_URL = "https://jarvis-xvjy.onrender.com";
+        const BACKEND_URL = window.location.origin;
 
-        // Speech Recognition (Voice Input)
         function startVoice() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return alert("Pelayar anda tidak menyokong Speech Recognition.");
+            if (!SpeechRecognition) return alert("Pelayar anda tak menyokong rekod suara.");
             
             const recognition = new SpeechRecognition();
             recognition.lang = 'ms-MY';
@@ -49,57 +52,62 @@
             };
         }
 
-        // Text-to-Speech (JARVIS Balas Suara)
         function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'ms-MY';
-            window.speechSynthesis.speak(utterance);
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ms-MY';
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
-        // Send Text / Voice Chat
         async function sendChat() {
             const prompt = document.getElementById('userInput').value;
             if (!prompt) return;
 
             const chatbox = document.getElementById('chatbox');
-            chatbox.innerHTML += `<p><b>Anda:</b> ${prompt}</p>`;
+            chatbox.innerHTML += `<p class="user-msg"><b>Anda:</b> ${prompt}</p>`;
 
-            const res = await fetch(`${BACKEND_URL}/chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt })
-            });
-
-            const data = await res.json();
-            chatbox.innerHTML += `<p><b>JARVIS:</b> ${data.reply}</p>`;
-            chatbox.scrollTop = chatbox.scrollHeight;
-            document.getElementById('userInput').value = '';
-            
-            speak(data.reply);
+            try {
+                const res = await fetch(`${BACKEND_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const data = await res.json();
+                chatbox.innerHTML += `<p class="jarvis-msg"><b>JARVIS:</b> ${data.reply}</p>`;
+                chatbox.scrollTop = chatbox.scrollHeight;
+                document.getElementById('userInput').value = '';
+                speak(data.reply);
+            } catch (err) {
+                chatbox.innerHTML += `<p style="color:red">Ralat sambungan ke server.</p>`;
+            }
         }
 
-        // Send Image to Vision Endpoint
         async function sendVision() {
             const fileInput = document.getElementById('imageInput');
             const prompt = document.getElementById('imagePrompt').value || "Apa yang ada dalam gambar ni?";
             
-            if (fileInput.files.length === 0) return alert("Sila pilih gambar terlebih dahulu.");
+            if (fileInput.files.length === 0) return alert("Sila pilih gambar dahulu.");
 
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
             formData.append("prompt", prompt);
 
             const chatbox = document.getElementById('chatbox');
-            chatbox.innerHTML += `<p><i>[Menghantar gambar untuk dianalisis...]</i></p>`;
+            chatbox.innerHTML += `<p class="user-msg"><i>[Memproses gambar...]</i></p>`;
 
-            const res = await fetch(`${BACKEND_URL}/vision`, {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await res.json();
-            chatbox.innerHTML += `<p><b>JARVIS (Vision):</b> ${data.reply}</p>`;
-            speak(data.reply);
+            try {
+                const res = await fetch(`${BACKEND_URL}/vision`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                chatbox.innerHTML += `<p class="jarvis-msg"><b>JARVIS (Vision):</b> ${data.reply}</p>`;
+                chatbox.scrollTop = chatbox.scrollHeight;
+                speak(data.reply);
+            } catch (err) {
+                chatbox.innerHTML += `<p style="color:red">Ralat memproses gambar.</p>`;
+            }
         }
     </script>
 </body>
