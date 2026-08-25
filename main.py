@@ -16,19 +16,26 @@ def home():
 def chat(request: ChatRequest):
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        return {"reply": "Error: GROQ_API_KEY tak dijumpai kat Render!"}
+        return {"reply": "Error: GROQ_API_KEY tak jumpa kat Render!"}
     
-    try:
-        client = Groq(api_key=api_key)
-        completion = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {"role": "system", "content": "Kau ialah JARVIS, pembantu AI yang bijak, ringkas dan mesra."},
-                {"role": "user", "content": request.prompt}
-            ],
-            temperature=0.7,
-            max_tokens=300
-        )
-        return {"reply": completion.choices[0].message.content}
-    except Exception as e:
-        return {"reply": f"Groq Error: {str(e)}"}
+    client = Groq(api_key=api_key.strip())
+    
+    # Senarai model ikut keutamaan
+    models = ["llama-3.1-8b-instant", "llama3-70b-8192", "mixtral-8x7b-32768"]
+    
+    for m in models:
+        try:
+            completion = client.chat.completions.create(
+                model=m,
+                messages=[
+                    {"role": "system", "content": "Kau ialah JARVIS, pembantu AI yang bijak dan ringkas."},
+                    {"role": "user", "content": request.prompt}
+                ],
+                temperature=0.7,
+                max_tokens=300
+            )
+            return {"reply": completion.choices[0].message.content, "model_used": m}
+        except Exception as e:
+            continue
+            
+    return {"reply": "Semua model Groq gagal dipanggil. Sila semak API Key."}
