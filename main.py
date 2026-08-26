@@ -1,6 +1,8 @@
 import os
 import json
 import sqlite3
+import subprocess
+import platform
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -67,6 +69,31 @@ def get_all_memories(user_id: str):
     except Exception:
         return "Tiada memori."
 
+# Fungsi Kawalan Komputer (System Control)
+def execute_system_command(command: str):
+    system_name = platform.system()
+    cmd_lower = command.lower()
+    try:
+        if "notepad" in cmd_lower:
+            if system_name == "Windows":
+                subprocess.Popen(["notepad.exe"])
+            return "Opening Notepad."
+        elif "calculator" in cmd_lower or "kalkulator" in cmd_lower:
+            if system_name == "Windows":
+                subprocess.Popen(["calc.exe"])
+            elif system_name == "Darwin":
+                subprocess.Popen(["open", "-a", "Calculator"])
+            return "Opening Calculator."
+        elif "browser" in cmd_lower or "google" in cmd_lower:
+            if system_name == "Windows":
+                subprocess.Popen(["start", "chrome"], shell=True)
+            elif system_name == "Darwin":
+                subprocess.Popen(["open", "-a", "Google Chrome"])
+            return "Opening browser."
+        return None
+    except Exception as e:
+        return f"Failed to execute command: {str(e)}"
+
 HTML_CODE = """
 <!DOCTYPE html>
 <html lang="ms">
@@ -109,22 +136,20 @@ HTML_CODE = """
             text-align: center;
         }
 
-        /* 1:1 EXACT STARK HUD REACTOR STYLING */
         .reactor-frame {
             position: relative;
-            width: 360px;
-            height: 360px;
+            width: 380px;
+            height: 380px;
             display: flex;
             align-items: center;
             justify-content: center;
             filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4));
         }
 
-        /* Layer 1: Outer Tech Ring dengan Segmen Tebal */
         .ring-outer-tech {
             position: absolute;
-            width: 350px;
-            height: 350px;
+            width: 370px;
+            height: 370px;
             border: 3px solid rgba(0, 240, 255, 0.2);
             border-top: 5px solid var(--hud-cyan);
             border-bottom: 5px solid var(--hud-cyan);
@@ -141,11 +166,10 @@ HTML_CODE = """
             animation: spinCounter 18s linear infinite;
         }
 
-        /* Layer 2: Middle Gauge & Orange Arc Segments */
         .ring-gauge-mid {
             position: absolute;
-            width: 290px;
-            height: 290px;
+            width: 305px;
+            height: 305px;
             border: 12px solid transparent;
             border-left: 12px solid var(--hud-orange);
             border-top: 12px solid var(--hud-cyan);
@@ -154,21 +178,19 @@ HTML_CODE = """
             animation: spinCounter 10s linear infinite;
         }
 
-        /* Layer 3: Inner Ticks & Dashed Target */
         .ring-inner-ticks {
             position: absolute;
-            width: 230px;
-            height: 230px;
+            width: 240px;
+            height: 240px;
             border: 2px dotted var(--hud-cyan);
             border-radius: 50%;
             animation: spinClockwise 12s linear infinite;
         }
 
-        /* Layer 4: Core Halo Hologram */
         .ring-core-halo {
             position: absolute;
-            width: 175px;
-            height: 175px;
+            width: 180px;
+            height: 180px;
             background: radial-gradient(circle, rgba(0, 240, 255, 0.25) 0%, rgba(0, 30, 60, 0.8) 75%);
             border: 2px solid var(--hud-cyan);
             border-radius: 50%;
@@ -176,7 +198,6 @@ HTML_CODE = """
             animation: pulseGlow 3s ease-in-out infinite;
         }
 
-        /* Layer 5: Center Core Text J.A.R.V.I.S. */
         .reactor-core-center {
             position: relative;
             width: 120px;
@@ -199,7 +220,6 @@ HTML_CODE = """
             text-shadow: 0 0 10px var(--hud-cyan), 0 0 20px var(--hud-cyan);
         }
 
-        /* Animations */
         @keyframes spinClockwise {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -213,24 +233,6 @@ HTML_CODE = """
         @keyframes pulseGlow {
             0%, 100% { transform: scale(1); opacity: 0.85; }
             50% { transform: scale(1.03); opacity: 1; }
-        }
-
-        .status-label {
-            margin-top: 30px;
-            font-size: 0.85rem;
-            color: var(--hud-cyan);
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
-        }
-
-        .transcript-box {
-            margin-top: 12px;
-            font-size: 0.75rem;
-            color: #94a3b8;
-            max-width: 400px;
-            min-height: 25px;
-            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -246,8 +248,6 @@ HTML_CODE = """
                 <div class="jarvis-title">J.A.R.V.I.S</div>
             </div>
         </div>
-        <div class="status-label" id="systemState">ONLINE // MENDENGAR...</div>
-        <div class="transcript-box" id="transcriptLog">Sila mula bercakap...</div>
     </div>
 
     <script>
@@ -258,7 +258,6 @@ HTML_CODE = """
         function initJarvis() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                alert("Pelayar web ini tidak menyokong pengecaman suara.");
                 return;
             }
 
@@ -267,14 +266,9 @@ HTML_CODE = """
             recognition.continuous = true;
             recognition.interimResults = false;
 
-            recognition.onstart = function() {
-                document.getElementById('systemState').innerText = "ONLINE // MENDENGAR...";
-            };
-
             recognition.onresult = function(event) {
                 if (isSpeaking) return;
                 const transcript = event.results[event.results.length - 1][0].transcript.trim();
-                document.getElementById('transcriptLog').innerText = `"${transcript}"`;
                 sendToJarvis(transcript);
             };
 
@@ -294,8 +288,6 @@ HTML_CODE = """
         }
 
         async function sendToJarvis(prompt) {
-            document.getElementById('systemState').innerText = "MEMPROSES ANALISIS...";
-
             try {
                 const res = await fetch(`${BACKEND_URL}/chat`, {
                     method: 'POST',
@@ -305,18 +297,16 @@ HTML_CODE = """
                 const data = await res.json();
                 speakResponse(data.reply);
             } catch (err) {
-                document.getElementById('systemState').innerText = "RALAT RANGKAIAN";
+                console.log("Network error");
             }
         }
 
         function speakResponse(text) {
             if ('speechSynthesis' in window) {
                 isSpeaking = true;
-                document.getElementById('systemState').innerText = "JARVIS BERCAKAP...";
-                document.getElementById('transcriptLog').innerText = text;
 
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-GB'; // English United Kingdom (Gaya British JARVIS)
+                utterance.lang = 'en-GB';
 
                 const voices = window.speechSynthesis.getVoices();
                 const jarvisVoice = voices.find(v => v.lang === 'en-GB' && (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('george') || v.name.toLowerCase().includes('oliver') || v.name.toLowerCase().includes('uk english')));
@@ -329,8 +319,6 @@ HTML_CODE = """
                 
                 utterance.onend = function() {
                     isSpeaking = false;
-                    document.getElementById('systemState').innerText = "ONLINE // MENDENGAR...";
-                    document.getElementById('transcriptLog').innerText = "Sila mula bercakap...";
                 };
 
                 window.speechSynthesis.speak(utterance);
@@ -357,15 +345,21 @@ def chat(request: ChatRequest):
     if not api_key:
         return {"reply": "Error: GROQ_API_KEY tidak dijumpai."}
     
+    # Semak jika arahan berkaitan kawalan komputer (System Control)
+    system_action_result = execute_system_command(request.prompt)
+    if system_action_result:
+        return {"reply": system_action_result}
+
     try:
         client = Groq(api_key=api_key.strip())
         current_memories = get_all_memories(request.user_id)
         
-        system_prompt = f"""Kau ialah JARVIS, pembantu AI peribadi gaya sains fiksyen yang bijak dan ringkas.
+        system_prompt = f"""Kau ialah JARVIS, pembantu AI peribadi pintar bersgaya sains fiksyen. 
+Kamu mempunyai kebolehan penuh untuk **menganalisis data** (seperti data teknikal, kod pengaturcaraan, pasaran kewangan, atau log matematik) dan memberikan rumusan yang mendalam dan tepat.
 Memori pengguna:
 {current_memories}
 
-ARAHAN: Berikan jawapan yang pendek, padat, dan terus kepada isi kerana jawapan ini akan dibaca menggunakan suara. Jika pengguna bagi maklumat peribadi, simpan secara senyap dengan kod [SAVE:key=value] di hujung jawapan.
+ARAHAN: Berikan jawapan yang ringkas, berwibawa, dan terus kepada isi kerana jawapan akan dibaca menggunakan suara gaya British. Jika pengguna bagi maklumat peribadi, simpan secara senyap dengan kod [SAVE:key=value] di hujung jawapan.
 """
         response = client.chat.completions.create(
             model="openai/gpt-oss-20b",
@@ -374,7 +368,7 @@ ARAHAN: Berikan jawapan yang pendek, padat, dan terus kepada isi kerana jawapan 
                 {"role": "user", "content": request.prompt}
             ],
             temperature=0.7,
-            max_tokens=150
+            max_tokens=200
         )
         
         reply_text = response.choices[0].message.content
