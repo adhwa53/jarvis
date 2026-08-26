@@ -73,22 +73,24 @@ HTML_CODE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J.A.R.V.I.S // ARC REACTOR CORE</title>
+    <title>J.A.R.V.I.S // HUD REACTOR 1:1</title>
     <style>
         :root {
-            --bg-deep: #020408;
-            --orange-glow: #f97316;
-            --cyan-glow: #38bdf8;
-            --text-main: #f1f5f9;
+            --bg-deep: #010408;
+            --hud-cyan: #00f0ff;
+            --hud-cyan-dim: rgba(0, 240, 255, 0.3);
+            --hud-orange: #ff9900;
+            --hud-orange-glow: rgba(255, 153, 0, 0.8);
+            --text-main: #e2e8f0;
         }
 
         body {
             font-family: 'Courier New', Courier, monospace, sans-serif;
             background-color: var(--bg-deep);
             background-image: 
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-                radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.1) 0%, transparent 70%);
-            background-size: 100% 4px, 100% 100%;
+                radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.12) 0%, rgba(1, 4, 8, 0.95) 75%),
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%);
+            background-size: 100% 100%, 100% 4px;
             color: var(--text-main);
             height: 100vh;
             margin: 0;
@@ -107,69 +109,97 @@ HTML_CODE = """
             text-align: center;
         }
 
-        /* ARC REACTOR STYLING - SENTIASA AKTIF */
-        .arc-reactor-container {
+        /* 1:1 EXACT STARK HUD REACTOR STYLING */
+        .reactor-frame {
+            position: relative;
+            width: 360px;
+            height: 360px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            position: relative;
-            width: 280px;
-            height: 280px;
+            filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4));
         }
 
-        .ring-outer {
+        /* Layer 1: Outer Tech Ring dengan Segmen Tebal */
+        .ring-outer-tech {
             position: absolute;
-            width: 260px;
-            height: 260px;
-            border: 2px dashed rgba(56, 189, 248, 0.6);
+            width: 350px;
+            height: 350px;
+            border: 3px solid rgba(0, 240, 255, 0.2);
+            border-top: 5px solid var(--hud-cyan);
+            border-bottom: 5px solid var(--hud-cyan);
+            border-radius: 50%;
+            animation: spinClockwise 25s linear infinite;
+        }
+
+        .ring-outer-tech::before {
+            content: '';
+            position: absolute;
+            top: -6px; left: -6px; right: -6px; bottom: -6px;
+            border: 2px dashed rgba(0, 240, 255, 0.4);
+            border-radius: 50%;
+            animation: spinCounter 18s linear infinite;
+        }
+
+        /* Layer 2: Middle Gauge & Orange Arc Segments */
+        .ring-gauge-mid {
+            position: absolute;
+            width: 290px;
+            height: 290px;
+            border: 12px solid transparent;
+            border-left: 12px solid var(--hud-orange);
+            border-top: 12px solid var(--hud-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--hud-orange-glow);
+            animation: spinCounter 10s linear infinite;
+        }
+
+        /* Layer 3: Inner Ticks & Dashed Target */
+        .ring-inner-ticks {
+            position: absolute;
+            width: 230px;
+            height: 230px;
+            border: 2px dotted var(--hud-cyan);
             border-radius: 50%;
             animation: spinClockwise 12s linear infinite;
         }
 
-        .ring-middle {
+        /* Layer 4: Core Halo Hologram */
+        .ring-core-halo {
             position: absolute;
-            width: 215px;
-            height: 215px;
-            border: 4px solid transparent;
-            border-top: 4px solid var(--orange-glow);
-            border-bottom: 4px solid var(--cyan-glow);
+            width: 175px;
+            height: 175px;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.25) 0%, rgba(0, 30, 60, 0.8) 75%);
+            border: 2px solid var(--hud-cyan);
             border-radius: 50%;
-            animation: spinCounter 6s linear infinite;
-            box-shadow: 0 0 25px rgba(249, 115, 22, 0.5);
+            box-shadow: inset 0 0 25px var(--hud-cyan), 0 0 30px rgba(0, 240, 255, 0.6);
+            animation: pulseGlow 3s ease-in-out infinite;
         }
 
-        .ring-inner {
-            position: absolute;
-            width: 170px;
-            height: 170px;
-            border: 1px dotted rgba(56, 189, 248, 0.9);
-            border-radius: 50%;
-            animation: spinClockwise 8s linear infinite;
-        }
-
-        .reactor-core {
+        /* Layer 5: Center Core Text J.A.R.V.I.S. */
+        .reactor-core-center {
+            position: relative;
             width: 120px;
             height: 120px;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, rgba(2, 6, 23, 0.95) 80%);
-            border: 2px solid var(--cyan-glow);
+            background: rgba(1, 10, 25, 0.9);
+            border: 2px solid var(--hud-cyan);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: inset 0 0 20px var(--cyan-glow), 0 0 30px rgba(56, 189, 248, 0.8);
-            z-index: 2;
+            box-shadow: inset 0 0 15px var(--hud-cyan);
+            z-index: 5;
         }
 
-        .reactor-text {
-            font-size: 0.75rem;
-            font-weight: bold;
-            color: var(--text-main);
-            letter-spacing: 2px;
-            text-align: center;
-            text-shadow: 0 0 10px var(--cyan-glow);
+        .jarvis-title {
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px var(--hud-cyan), 0 0 20px var(--hud-cyan);
         }
 
+        /* Animations */
         @keyframes spinClockwise {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -180,20 +210,25 @@ HTML_CODE = """
             100% { transform: rotate(-360deg); }
         }
 
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 0.85; }
+            50% { transform: scale(1.03); opacity: 1; }
+        }
+
         .status-label {
-            margin-top: 25px;
+            margin-top: 30px;
             font-size: 0.85rem;
-            color: var(--cyan-glow);
-            letter-spacing: 3px;
+            color: var(--hud-cyan);
+            letter-spacing: 4px;
             text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
         }
 
         .transcript-box {
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 0.75rem;
             color: #94a3b8;
-            max-width: 350px;
+            max-width: 400px;
             min-height: 25px;
             letter-spacing: 1px;
         }
@@ -202,15 +237,16 @@ HTML_CODE = """
 <body onload="initJarvis()">
 
     <div class="container">
-        <div class="arc-reactor-container" id="arcReactor">
-            <div class="ring-outer"></div>
-            <div class="ring-middle"></div>
-            <div class="ring-inner"></div>
-            <div class="reactor-core">
-                <div class="reactor-text" id="reactorStatus">ONLINE</div>
+        <div class="reactor-frame">
+            <div class="ring-outer-tech"></div>
+            <div class="ring-gauge-mid"></div>
+            <div class="ring-inner-ticks"></div>
+            <div class="ring-core-halo"></div>
+            <div class="reactor-core-center">
+                <div class="jarvis-title">J.A.R.V.I.S</div>
             </div>
         </div>
-        <div class="status-label" id="systemState">SISTEM AKTIF // MENUNGGU ARAHAN...</div>
+        <div class="status-label" id="systemState">ONLINE // MENDENGAR...</div>
         <div class="transcript-box" id="transcriptLog">Sila mula bercakap...</div>
     </div>
 
@@ -228,11 +264,11 @@ HTML_CODE = """
 
             recognition = new SpeechRecognition();
             recognition.lang = 'ms-MY';
-            recognition.continuous = true; // Sentiasa hidup
+            recognition.continuous = true;
             recognition.interimResults = false;
 
             recognition.onstart = function() {
-                document.getElementById('systemState').innerText = "MENDENGAR...";
+                document.getElementById('systemState').innerText = "ONLINE // MENDENGAR...";
             };
 
             recognition.onresult = function(event) {
@@ -247,20 +283,18 @@ HTML_CODE = """
             };
 
             recognition.onend = function() {
-                // Auto restart kalau terpadam supaya sentiasa mendengar
                 if (!isSpeaking) {
                     try { recognition.start(); } catch(e) {}
                 }
             };
 
-            // Mula mendengar secara automatik
             try {
                 recognition.start();
             } catch(e) {}
         }
 
         async function sendToJarvis(prompt) {
-            document.getElementById('systemState').innerText = "MEMPROSES...";
+            document.getElementById('systemState').innerText = "MEMPROSES ANALISIS...";
 
             try {
                 const res = await fetch(`${BACKEND_URL}/chat`, {
@@ -278,20 +312,35 @@ HTML_CODE = """
         function speakResponse(text) {
             if ('speechSynthesis' in window) {
                 isSpeaking = true;
-                document.getElementById('systemState').innerText = "BERCAKAP...";
+                document.getElementById('systemState').innerText = "JARVIS BERCAKAP...";
                 document.getElementById('transcriptLog').innerText = text;
 
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'ms-MY';
+                utterance.lang = 'en-GB'; // English United Kingdom (Gaya British JARVIS)
+
+                const voices = window.speechSynthesis.getVoices();
+                const jarvisVoice = voices.find(v => v.lang === 'en-GB' && (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('george') || v.name.toLowerCase().includes('oliver') || v.name.toLowerCase().includes('uk english')));
+                if (jarvisVoice) {
+                    utterance.voice = jarvisVoice;
+                }
+
+                utterance.pitch = 0.9;
+                utterance.rate = 1.0;
                 
                 utterance.onend = function() {
                     isSpeaking = false;
-                    document.getElementById('systemState').innerText = "MENDENGAR...";
+                    document.getElementById('systemState').innerText = "ONLINE // MENDENGAR...";
                     document.getElementById('transcriptLog').innerText = "Sila mula bercakap...";
                 };
 
                 window.speechSynthesis.speak(utterance);
             }
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
         }
     </script>
 </body>
