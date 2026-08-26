@@ -1,0 +1,93 @@
+/* Container Utama Arc Reactor */
+.arc-reactor-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 15px auto;
+}
+
+/* Gelang Luar Berputar Lawan Jam */
+.ring-outer {
+    position: absolute;
+    width: 210px;
+    height: 210px;
+    border: 2px dashed rgba(56, 189, 248, 0.4);
+    border-radius: 50%;
+    animation: spinClockwise 15s linear infinite;
+}
+
+/* Gelang Tengah Tebal & Bercahaya */
+.ring-middle {
+    position: absolute;
+    width: 175px;
+    height: 175px;
+    border: 4px solid transparent;
+    border-top: 4px solid var(--cyan-glow);
+    border-bottom: 4px solid var(--orange-glow);
+    border-radius: 50%;
+    animation: spinCounter 8s linear infinite;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+/* Gelang Dalam Garisan Halus */
+.ring-inner {
+    position: absolute;
+    width: 135px;
+    height: 135px;
+    border: 1px dotted rgba(249, 115, 22, 0.8);
+    border-radius: 50%;
+    animation: spinClockwise 10s linear infinite;
+}
+
+/* Teras Tengah (Core) */
+.reactor-core {
+    width: 95px;
+    height: 95px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(2, 6, 23, 0.9) 80%);
+    border: 2px solid var(--cyan-glow);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 15px var(--cyan-glow), 0 0 20px rgba(56, 189, 248, 0.6);
+    cursor: pointer;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.reactor-core:hover {
+    box-shadow: inset 0 0 25px var(--orange-glow), 0 0 30px var(--orange-glow);
+    border-color: var(--orange-glow);
+}
+
+.reactor-text {
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: var(--text-main);
+    letter-spacing: 2px;
+    text-align: center;
+    text-shadow: 0 0 6px var(--cyan-glow);
+}
+
+/* Animasi Putaran */
+@keyframes spinClockwise {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes spinCounter {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
+
+/* Efek Berdenyut Bila Bercakap/AI Berfungsi */
+.active-reactor .ring-middle {
+    border-top-color: var(--orange-glow);
+    border-bottom-color: var(--cyan-glow);
+    animation-duration: 2s; /* Putar laju bila aktif */
+    box-shadow: 0 0 25px var(--orange-glow);
+}
