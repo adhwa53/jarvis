@@ -36,7 +36,7 @@ class ReminderRequest(BaseModel):
     time_str: str
 
 # ---------------------------------------------------------
-# DATABASE SETUP (SQLite - Diinspirasikan dari Jarvis Architecture)
+# DATABASE SETUP (SQLite)
 # ---------------------------------------------------------
 def init_db():
     conn = sqlite3.connect("jarvis_memory.db")
@@ -102,7 +102,7 @@ def get_all_memories(user_id: str):
         return "Tiada memori."
 
 # ---------------------------------------------------------
-# ULTIMATE SCI-FI OMNI-HUD UI v5.0
+# ULTIMATE SCI-FI OMNI-HUD UI v5.0 (DENGAN ARC REACTOR)
 # ---------------------------------------------------------
 HTML_CODE = """
 <!DOCTYPE html>
@@ -205,7 +205,7 @@ HTML_CODE = """
         }
 
         #chatbox {
-            height: 190px;
+            height: 180px;
             overflow-y: auto;
             background: rgba(1, 3, 8, 0.95);
             padding: 8px;
@@ -224,7 +224,7 @@ HTML_CODE = """
             margin-bottom: 6px;
         }
 
-        input[type="text"], select, textarea, input[type="datetime-local"] {
+        input[type="text"], select, textarea {
             width: 100%;
             padding: 7px;
             background: rgba(1, 3, 8, 0.95);
@@ -276,22 +276,96 @@ HTML_CODE = """
         }
         .btn-quick:hover { background: rgba(56, 189, 248, 0.2); }
 
-        .visualizer {
+        /* ARC REACTOR STYLING */
+        .arc-reactor-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin: 8px auto;
+        }
+
+        .ring-outer {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border: 2px dashed rgba(56, 189, 248, 0.4);
+            border-radius: 50%;
+            animation: spinClockwise 15s linear infinite;
+        }
+
+        .ring-middle {
+            position: absolute;
+            width: 125px;
+            height: 125px;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--cyan-glow);
+            border-bottom: 3px solid var(--orange-glow);
+            border-radius: 50%;
+            animation: spinCounter 8s linear infinite;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .ring-inner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 1px dotted rgba(249, 115, 22, 0.8);
+            border-radius: 50%;
+            animation: spinClockwise 10s linear infinite;
+        }
+
+        .reactor-core {
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(2, 6, 23, 0.9) 80%);
+            border: 2px solid var(--cyan-glow);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 3px;
-            height: 18px;
-            margin: 5px 0;
-            background: rgba(0,0,0,0.5);
-            border-radius: 3px;
+            box-shadow: inset 0 0 10px var(--cyan-glow), 0 0 15px rgba(56, 189, 248, 0.6);
+            cursor: pointer;
+            z-index: 2;
+            transition: all 0.3s ease;
         }
-        .bar { width: 3px; height: 4px; background: var(--cyan-glow); border-radius: 2px; }
-        .active-bar .bar { animation: pulseWave 0.4s infinite alternate; }
-        @keyframes pulseWave { 0% { height: 4px; } 100% { height: 14px; background: var(--orange-glow); } }
+
+        .reactor-core:hover {
+            box-shadow: inset 0 0 20px var(--orange-glow), 0 0 25px var(--orange-glow);
+            border-color: var(--orange-glow);
+        }
+
+        .reactor-text {
+            font-size: 0.55rem;
+            font-weight: bold;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            text-align: center;
+            text-shadow: 0 0 5px var(--cyan-glow);
+        }
+
+        @keyframes spinClockwise {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinCounter {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        .active-reactor .ring-middle {
+            border-top-color: var(--orange-glow);
+            border-bottom-color: var(--cyan-glow);
+            animation-duration: 2s;
+            box-shadow: 0 0 20px var(--orange-glow);
+        }
 
         #memoryList, #notesList, #remindersList {
-            max-height: 100px;
+            max-height: 95px;
             overflow-y: auto;
             background: rgba(1, 3, 8, 0.95);
             padding: 5px;
@@ -312,7 +386,7 @@ HTML_CODE = """
             border: 1px solid rgba(74, 222, 128, 0.3);
             border-radius: 4px;
             padding: 6px;
-            height: 60px;
+            height: 55px;
             overflow-y: auto;
             font-size: 0.65rem;
             line-height: 1.1;
@@ -326,9 +400,6 @@ HTML_CODE = """
             justify-content: space-between;
         }
         .sys-metrics span { color: var(--orange-glow); }
-
-        .settings-box label { font-size: 0.7rem; color: #94a3b8; display: block; margin-top: 3px; }
-        .settings-box input { width: 100%; accent-color: var(--orange-glow); }
     </style>
 </head>
 <body onload="initSystem()">
@@ -339,7 +410,7 @@ HTML_CODE = """
     </header>
 
     <div class="grid-container">
-        <!-- Kolum 1: Komunikasi & Sembang -->
+        <!-- Kolum 1 -->
         <div>
             <div class="card">
                 <h3>Neural Communication Link</h3>
@@ -351,16 +422,19 @@ HTML_CODE = """
                 </select>
 
                 <div id="chatbox">
-                    <p class="jarvis-msg"><b>JARVIS:</b> Sistem v5 aktif dengan modul automasi misi.</p>
+                    <p class="jarvis-msg"><b>JARVIS:</b> Arc reactor dan sistem v5 aktif.</p>
                 </div>
                 
-                <div class="visualizer" id="vizBar">
-                    <div class="bar" style="animation-delay: 0.1s"></div>
-                    <div class="bar" style="animation-delay: 0.2s"></div>
-                    <div class="bar" style="animation-delay: 0.3s"></div>
-                    <div class="bar" style="animation-delay: 0.4s"></div>
-                    <div class="bar" style="animation-delay: 0.5s"></div>
+                <!-- ARC REACTOR WIDGET -->
+                <div class="arc-reactor-container" id="arcReactor" onclick="startVoice()">
+                    <div class="ring-outer"></div>
+                    <div class="ring-middle"></div>
+                    <div class="ring-inner"></div>
+                    <div class="reactor-core">
+                        <div class="reactor-text" id="reactorStatus">J.A.R.V.I.S</div>
+                    </div>
                 </div>
+                <p style="text-align:center; font-size:0.6rem; color:#94a3b8; margin:0 0 6px 0;">(Tekan bulatan untuk suara)</p>
 
                 <div class="quick-actions">
                     <button class="btn-quick" onclick="sendQuick('Siapa nama aku?')">📌 Siapa nama aku?</button>
@@ -373,11 +447,10 @@ HTML_CODE = """
                     <input type="text" id="userInput" placeholder="Taip arahan..." onkeypress="if(event.key === 'Enter') sendChat()">
                     <button onclick="sendChat()">HANTAR</button>
                 </div>
-                <button class="btn-full" onclick="startVoice()">🎙️ AKTIFKAN SUARA</button>
             </div>
         </div>
 
-        <!-- Kolum 2: Memori & Log Terminal -->
+        <!-- Kolum 2 -->
         <div>
             <div class="card">
                 <h3>Active Memory Bank</h3>
@@ -391,7 +464,7 @@ HTML_CODE = """
                 <h3>System Terminal Log</h3>
                 <div id="terminalLog">
                     [00:00:01] System boot initialized...<br>
-                    [00:00:02] Automation modules loaded.
+                    [00:00:02] Arc reactor visual active.
                 </div>
             </div>
 
@@ -402,7 +475,7 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Kolum 3: Nota Misi & Reminders (Modul Tambahan Baru) -->
+        <!-- Kolum 3 -->
         <div>
             <div class="card">
                 <h3>Mission Logs & Notes</h3>
@@ -450,9 +523,16 @@ HTML_CODE = """
         }
 
         function setVisualizer(active) {
-            const viz = document.getElementById('vizBar');
-            if (active) viz.classList.add('active-bar');
-            else viz.classList.remove('active-bar');
+            const reactor = document.getElementById('arcReactor');
+            const statusText = document.getElementById('reactorStatus');
+            
+            if (active) {
+                reactor.classList.add('active-reactor');
+                statusText.innerText = "ACTIVE";
+            } else {
+                reactor.classList.remove('active-reactor');
+                statusText.innerText = "J.A.R.V.I.S";
+            }
         }
 
         function sendQuick(text) {
@@ -644,7 +724,7 @@ HTML_CODE = """
 """
 
 # ---------------------------------------------------------
-# ENDPOINTS BACKEND (TAMBAHAN REMINDERS)
+# ENDPOINTS BACKEND
 # ---------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 def home():
