@@ -87,7 +87,7 @@ HTML_CODE = """
             background-color: var(--bg-deep);
             background-image: 
                 linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-                radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 70%);
+                radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.1) 0%, transparent 70%);
             background-size: 100% 4px, 100% 100%;
             color: var(--text-main);
             height: 100vh;
@@ -107,7 +107,7 @@ HTML_CODE = """
             text-align: center;
         }
 
-        /* ARC REACTOR STYLING */
+        /* ARC REACTOR STYLING - SENTIASA AKTIF */
         .arc-reactor-container {
             display: flex;
             flex-direction: column;
@@ -116,16 +116,15 @@ HTML_CODE = """
             position: relative;
             width: 280px;
             height: 280px;
-            cursor: pointer;
         }
 
         .ring-outer {
             position: absolute;
             width: 260px;
             height: 260px;
-            border: 2px dashed rgba(56, 189, 248, 0.4);
+            border: 2px dashed rgba(56, 189, 248, 0.6);
             border-radius: 50%;
-            animation: spinClockwise 15s linear infinite;
+            animation: spinClockwise 12s linear infinite;
         }
 
         .ring-middle {
@@ -133,34 +132,33 @@ HTML_CODE = """
             width: 215px;
             height: 215px;
             border: 4px solid transparent;
-            border-top: 4px solid var(--cyan-glow);
-            border-bottom: 4px solid var(--orange-glow);
+            border-top: 4px solid var(--orange-glow);
+            border-bottom: 4px solid var(--cyan-glow);
             border-radius: 50%;
-            animation: spinCounter 8s linear infinite;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+            animation: spinCounter 6s linear infinite;
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.5);
         }
 
         .ring-inner {
             position: absolute;
             width: 170px;
             height: 170px;
-            border: 1px dotted rgba(249, 115, 22, 0.8);
+            border: 1px dotted rgba(56, 189, 248, 0.9);
             border-radius: 50%;
-            animation: spinClockwise 10s linear infinite;
+            animation: spinClockwise 8s linear infinite;
         }
 
         .reactor-core {
             width: 120px;
             height: 120px;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.5) 0%, rgba(2, 6, 23, 0.95) 80%);
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, rgba(2, 6, 23, 0.95) 80%);
             border: 2px solid var(--cyan-glow);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: inset 0 0 15px var(--cyan-glow), 0 0 25px rgba(56, 189, 248, 0.7);
+            box-shadow: inset 0 0 20px var(--cyan-glow), 0 0 30px rgba(56, 189, 248, 0.8);
             z-index: 2;
-            transition: all 0.3s ease;
         }
 
         .reactor-text {
@@ -169,7 +167,7 @@ HTML_CODE = """
             color: var(--text-main);
             letter-spacing: 2px;
             text-align: center;
-            text-shadow: 0 0 8px var(--cyan-glow);
+            text-shadow: 0 0 10px var(--cyan-glow);
         }
 
         @keyframes spinClockwise {
@@ -182,50 +180,43 @@ HTML_CODE = """
             100% { transform: rotate(-360deg); }
         }
 
-        .active-reactor .ring-middle {
-            border-top-color: var(--orange-glow);
-            border-bottom-color: var(--cyan-glow);
-            animation-duration: 1.5s;
-            box-shadow: 0 0 35px var(--orange-glow);
-        }
-
         .status-label {
-            margin-top: 20px;
-            font-size: 0.8rem;
+            margin-top: 25px;
+            font-size: 0.85rem;
             color: var(--cyan-glow);
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
         }
 
         .transcript-box {
             margin-top: 10px;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #94a3b8;
-            max-width: 300px;
-            min-height: 20px;
+            max-width: 350px;
+            min-height: 25px;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body onload="initJarvis()">
 
     <div class="container">
-        <div class="arc-reactor-container" id="arcReactor" onclick="toggleListening()">
+        <div class="arc-reactor-container" id="arcReactor">
             <div class="ring-outer"></div>
             <div class="ring-middle"></div>
             <div class="ring-inner"></div>
             <div class="reactor-core">
-                <div class="reactor-text" id="reactorStatus">STANDBY</div>
+                <div class="reactor-text" id="reactorStatus">ONLINE</div>
             </div>
         </div>
-        <div class="status-label" id="systemState">Klik atau mula bercakap...</div>
-        <div class="transcript-box" id="transcriptLog"></div>
+        <div class="status-label" id="systemState">SISTEM AKTIF // MENUNGGU ARAHAN...</div>
+        <div class="transcript-box" id="transcriptLog">Sila mula bercakap...</div>
     </div>
 
     <script>
         const BACKEND_URL = window.location.origin;
         let recognition;
-        let isListening = false;
         let isSpeaking = false;
 
         function initJarvis() {
@@ -237,78 +228,39 @@ HTML_CODE = """
 
             recognition = new SpeechRecognition();
             recognition.lang = 'ms-MY';
-            recognition.continuous = false;
+            recognition.continuous = true; // Sentiasa hidup
             recognition.interimResults = false;
 
             recognition.onstart = function() {
-                isListening = true;
-                setVisualizer(true);
-                document.getElementById('systemState').innerText = "LISTENING...";
+                document.getElementById('systemState').innerText = "MENDENGAR...";
             };
 
             recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
+                if (isSpeaking) return;
+                const transcript = event.results[event.results.length - 1][0].transcript.trim();
                 document.getElementById('transcriptLog').innerText = `"${transcript}"`;
                 sendToJarvis(transcript);
             };
 
             recognition.onerror = function(event) {
                 console.log("Speech error: ", event.error);
-                stopListening();
             };
 
             recognition.onend = function() {
-                isListening = false;
+                // Auto restart kalau terpadam supaya sentiasa mendengar
                 if (!isSpeaking) {
-                    setVisualizer(false);
-                    document.getElementById('systemState').innerText = "STANDBY (Klik untuk mula)";
+                    try { recognition.start(); } catch(e) {}
                 }
             };
 
-            // Auto-start listening on load or click
-            startListening();
-        }
-
-        function toggleListening() {
-            if (isListening) {
-                stopListening();
-            } else {
-                startListening();
-            }
-        }
-
-        function startListening() {
-            if (recognition && !isListening && !isSpeaking) {
-                try {
-                    recognition.start();
-                } catch(e) {
-                    console.log(e);
-                }
-            }
-        }
-
-        function stopListening() {
-            if (recognition && isListening) {
-                recognition.stop();
-            }
-        }
-
-        function setVisualizer(active) {
-            const reactor = document.getElementById('arcReactor');
-            const statusText = document.getElementById('reactorStatus');
-            
-            if (active) {
-                reactor.classList.add('active-reactor');
-                statusText.innerText = "ACTIVE";
-            } else {
-                reactor.classList.remove('active-reactor');
-                statusText.innerText = "STANDBY";
-            }
+            // Mula mendengar secara automatik
+            try {
+                recognition.start();
+            } catch(e) {}
         }
 
         async function sendToJarvis(prompt) {
-            document.getElementById('systemState').innerText = "PROCESSING...";
-            setVisualizer(true);
+            document.getElementById('systemState').innerText = "MEMPROSES...";
 
             try {
                 const res = await fetch(`${BACKEND_URL}/chat`, {
@@ -319,17 +271,14 @@ HTML_CODE = """
                 const data = await res.json();
                 speakResponse(data.reply);
             } catch (err) {
-                document.getElementById('systemState').innerText = "ERROR";
-                setVisualizer(false);
+                document.getElementById('systemState').innerText = "RALAT RANGKAIAN";
             }
         }
 
         function speakResponse(text) {
             if ('speechSynthesis' in window) {
                 isSpeaking = true;
-                stopListening();
-                setVisualizer(true);
-                document.getElementById('systemState').innerText = "SPEAKING...";
+                document.getElementById('systemState').innerText = "BERCAKAP...";
                 document.getElementById('transcriptLog').innerText = text;
 
                 const utterance = new SpeechSynthesisUtterance(text);
@@ -337,10 +286,8 @@ HTML_CODE = """
                 
                 utterance.onend = function() {
                     isSpeaking = false;
-                    setVisualizer(false);
-                    document.getElementById('systemState').innerText = "STANDBY";
-                    // Sambung semula mendengar selepas AI habis bercakap
-                    setTimeout(startListening, 500);
+                    document.getElementById('systemState').innerText = "MENDENGAR...";
+                    document.getElementById('transcriptLog').innerText = "Sila mula bercakap...";
                 };
 
                 window.speechSynthesis.speak(utterance);
